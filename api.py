@@ -6,7 +6,7 @@ from pydantic_models import (
     WorkerWithHistory,
     WorkerBase,
     WorkerWithPrediction,
-    WorkerWithFeatures,
+    WorkerWithFeatures
 )
 from fastapi import FastAPI, HTTPException
 from databases import Database
@@ -71,7 +71,7 @@ def get_prediction(data) -> str:
     STRESS_LEVEL: list[str] = [
         "Низкий уровень стресса",
         "Средний уровень стресса",
-        "Высокий уровень стресса",
+        "Высокий уровень стресса"
     ]
     return STRESS_LEVEL[prediction[0]]
 
@@ -167,7 +167,7 @@ async def get_worker_stress_level(worker: WorkerWithFeatures) -> dict[str, str]:
         first_name=worker.first_name,
         last_name=worker.last_name,
         surname=worker.surname,
-        stress_level=prediction,
+        stress_level=prediction
     )
     await save_prediction(worker_prediction)
     return worker_prediction
