@@ -15,7 +15,8 @@ CREATE TABLE workers (
     first_name varchar(100) NOT NULL,
     last_name varchar(100) NOT NULL,
     surname varchar(100) NOT NULL,
-    mental_health_history boolean NOT NULL
+    mental_health_history boolean NOT NULL,
+    UNIQUE (first_name, last_name, surname)
 );
 CREATE TABLE workers_info (
     worker_info_id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
