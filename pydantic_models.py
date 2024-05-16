@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class WorkerBase(BaseModel):
@@ -18,11 +18,6 @@ class WorkerWithHistory(WorkerBase):
 
 class WorkerWithFeatures(WorkerWithHistory):
     info_date: datetime
-
-    @validator("info_date", pre=True)
-    def parse_datetime(cls, value):
-        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-
     anxiety: int = Field(ge=0, le=21)
     self_esteem: int = Field(ge=0, le=30)
     depression: int = Field(ge=0, le=27)
