@@ -68,7 +68,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
+async def custom_swagger_ui_html() -> str:
     """
     Serves custom Swagger UI HTML page.
 
@@ -86,7 +86,7 @@ async def custom_swagger_ui_html():
 
 
 @app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
-async def swagger_ui_redirect():
+async def swagger_ui_redirect() -> str:
     """
     Redirects user to Swagger UI OAuth2 redirect page.
 
@@ -98,7 +98,7 @@ async def swagger_ui_redirect():
 
 
 @app.get("/redoc", include_in_schema=False)
-async def redoc_html():
+async def redoc_html() -> str:
     """
     Retrieves HTML content for the ReDoc documentation page.
 
