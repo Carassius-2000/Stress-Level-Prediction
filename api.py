@@ -6,13 +6,13 @@ from pydantic_models import (
     WorkerWithHistory,
     WorkerBase,
     WorkerWithPrediction,
-    WorkerWithFeatures
+    WorkerWithFeatures,
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.openapi.docs import (
     get_redoc_html,
     get_swagger_ui_html,
-    get_swagger_ui_oauth2_redirect_html
+    get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.staticfiles import StaticFiles
 from databases import Database
@@ -30,17 +30,19 @@ def get_database_credentials() -> tuple[str, str]:
     ----------
         A tuple containing database username and password.
     """
-    environment_variables = dotenv_values()
-    db_username = environment_variables["DB_USERNAME"]
-    db_password = environment_variables["DB_PASSWORD"]
+    environment_variables: dict[str, str] = dotenv_values()
+    db_username: str = environment_variables["DB_USERNAME"]
+    db_password: str = environment_variables["DB_PASSWORD"]
     return db_username, db_password
 
 
+db_username: str
+db_password: str
 db_username, db_password = get_database_credentials()
 DATABASE_URL: str = (
     f"postgresql+asyncpg://{db_username}:{db_password}@localhost/antistress"
 )
-database = Database(DATABASE_URL)
+database: Database = Database(DATABASE_URL)
 
 
 @asynccontextmanager
@@ -57,12 +59,12 @@ async def lifespan(app: FastAPI) -> None:
     await database.disconnect()
 
 
-app = FastAPI(
+app: FastAPI = FastAPI(
     title="Stress Level Prediction",
     version="1.0.0",
     lifespan=lifespan,
     docs_url=None,
-    redoc_url=None
+    redoc_url=None,
 )
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -81,7 +83,7 @@ async def custom_swagger_ui_html() -> str:
         title=app.title + " - Swagger UI",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
         swagger_js_url="/static/swagger-ui-bundle.js",
-        swagger_css_url="/static/swagger-ui.css"
+        swagger_css_url="/static/swagger-ui.css",
     )
 
 
@@ -109,7 +111,7 @@ async def redoc_html() -> str:
     return get_redoc_html(
         openapi_url=app.openapi_url,
         title=app.title + " - ReDoc",
-        redoc_js_url="/static/redoc.standalone.js"
+        redoc_js_url="/static/redoc.standalone.js",
     )
 
 
@@ -130,7 +132,7 @@ def get_prediction(data) -> str:
     STRESS_LEVEL: list[str] = [
         "Низкий уровень стресса",
         "Средний уровень стресса",
-        "Высокий уровень стресса"
+        "Высокий уровень стресса",
     ]
     return STRESS_LEVEL[prediction[0]]
 
@@ -148,7 +150,7 @@ def parse_features(worker: WorkerWithFeatures) -> dict[str, int]:
         dict[str, int]: Parsed features, where keys are feature names \
             and values are corresponding integer values.
     """
-    values = worker.dict()
+    values: dict[str, str | int | bool] = worker.dict()
     excluded: list[str] = ["first_name", "last_name", "surname", "info_date"]
     features: dict[str, int] = {
         key: int(value) for key, value in values.items() if key not in excluded
@@ -168,7 +170,7 @@ async def save_features(worker: WorkerWithFeatures) -> None:
     ----------
         HTTPException: If there is an error while executing database query.
     """
-    values = worker.dict()
+    values: dict[str, str | int | bool] = worker.dict()
     del values["mental_health_history"]
     query: str = (
         "CALL save_features(:first_name, :last_name, :surname, :info_date, \
@@ -199,7 +201,7 @@ async def save_prediction(worker: WorkerWithPrediction) -> None:
     query: str = (
         "CALL save_prediction(:first_name, :last_name, :surname, :stress_level);"
     )
-    values = worker.dict()
+    values: dict[str, str] = worker.dict()
     try:
         await database.execute(query=query, values=values)
     except Exception as e:
@@ -220,13 +222,13 @@ async def get_worker_stress_level(worker: WorkerWithFeatures) -> dict[str, str]:
         dict[str, str]: Worker's first name, last name, surname and predicted stress level.
     """
     await save_features(worker)
-    X = pd.DataFrame([parse_features(worker)], dtype="int8")
+    X: pd.DataFrame = pd.DataFrame([parse_features(worker)], dtype="int8")
     prediction: str = get_prediction(X)
-    worker_prediction = WorkerWithPrediction(
+    worker_prediction: WorkerWithPrediction = WorkerWithPrediction(
         first_name=worker.first_name,
         last_name=worker.last_name,
         surname=worker.surname,
-        stress_level=prediction
+        stress_level=prediction,
     )
     await save_prediction(worker_prediction)
     return worker_prediction
@@ -252,12 +254,12 @@ async def create_worker(worker: WorkerWithHistory, status_code=201) -> dict[str,
     query: str = (
         "CALL add_worker(:first_name, :last_name, :surname, :mental_health_history);"
     )
-    values = worker.dict()
+    values: dict[str, str | bool] = worker.dict()
     try:
         await database.execute(query=query, values=values)
     except Exception as e:
         raise HTTPException(status_code=500, detail="Не удалось добавить работника")
-    result = {
+    result: dict[str, str] = {
         "message": f"Работник {worker.first_name} {worker.last_name} был успешно добавлен"
     }
     return result
@@ -281,12 +283,12 @@ async def delete_worker(worker: WorkerBase) -> dict[str, str]:
         HTTPException: If there is an error executing database query.
     """
     query: str = "CALL delete_worker(:first_name, :last_name, :surname);"
-    values = worker.dict()
+    values: dict[str, str] = worker.dict()
     try:
         await database.execute(query=query, values=values)
     except Exception as e:
         raise HTTPException(status_code=500, detail="Не удалось удалить работника")
-    result = {
+    result: dict[str, str] = {
         "message": f"Работник {worker.first_name} {worker.last_name} был успешно удален"
     }
     return result
